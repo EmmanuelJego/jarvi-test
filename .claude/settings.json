@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(pnpm dlx *)",
+      "Bash(pnpm install *)",
+      "Bash(kill -9 689592 689694 689695)"
+    ]
+  }
+}
