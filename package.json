@@ -14,11 +14,13 @@
     "@iconify-json/lucide": "^1.2.112",
     "@iconify-json/simple-icons": "^1.2.86",
     "@nhost/nhost-js": "^4.7.2",
+    "@nuxt/icon": "2.2.3",
     "@nuxt/ui": "^4.8.2",
     "nuxt": "^4.4.8",
     "tailwindcss": "^4.3.1"
   },
   "devDependencies": {
+    "@iconify-json/hugeicons": "^1.2.29",
     "@nuxt/eslint": "^1.16.0",
     "eslint": "^10.5.0",
     "typescript": "^6.0.3",
