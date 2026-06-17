@@ -1,14 +1,32 @@
-<script setup lang="ts">
-useHead({ title: 'Statistiques · Jarvi' })
-</script>
-
 <template>
   <div class="p-6">
     <h1 class="text-2xl font-semibold text-highlighted">
       Statistiques
     </h1>
-    <p class="mt-2 text-muted">
-      Le contenu de cette page sera implémenté prochainement.
-    </p>
+
+    <UCard class="mt-6">
+      <template #header>
+        <div class="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h2 class="text-base font-semibold text-highlighted">
+              Taux de réponse par canal
+            </h2>
+            <p class="text-sm text-muted">
+              %age de réponses réçues pour les messages envoyés sur la période sélectionnée.
+            </p>
+          </div>
+          <StatsPeriodFilter v-model="selection" />
+        </div>
+      </template>
+
+      <StatsResponseRateChart :periods />
+    </UCard>
   </div>
 </template>
+
+<script setup lang="ts">
+useHead({ title: 'Statistiques · Jarvi' })
+
+const selection = ref<PeriodSelection>({ preset: '30d' })
+const periods = computed(() => resolvePeriods(selection.value))
+</script>

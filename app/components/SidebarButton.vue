@@ -1,14 +1,3 @@
-<script setup lang="ts">
-const props = defineProps<{
-  icon: string
-  to?: string
-  label?: string
-}>()
-
-const route = useRoute()
-const isActive = computed(() => !!props.to && route.path === props.to)
-</script>
-
 <template>
   <UButton
     :icon="icon"
@@ -25,3 +14,14 @@ const isActive = computed(() => !!props.to && route.path === props.to)
     ]"
   />
 </template>
+
+<script setup lang="ts">
+const props = defineProps<{
+  icon: string
+  to?: string
+  label?: string
+}>()
+
+const route = useRoute()
+const isActive = computed(() => !!props.to && route.path === props.to)
+</script>

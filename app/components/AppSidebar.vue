@@ -1,6 +1,6 @@
 <template>
   <aside class="h-screen w-20 p-2">
-    <div class="h-full rounded-md flex shrink-0 flex-col items-center gap-3 bg-primary py-3">
+    <div class="h-full rounded-md flex shrink-0 flex-col items-center gap-3 bg-primary py-4">
       <!-- Logo -->
       <NuxtLink to="/" aria-label="Accueil" class="mb-3">
         <AppLogo class="size-9" />

@@ -22,6 +22,7 @@ export default defineNuxtPlugin(async () => {
     }
   }
 
+  // Provide the nhost client through `$nhost`
   return {
     provide: {
       nhost

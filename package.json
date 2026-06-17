@@ -13,9 +13,12 @@
   "dependencies": {
     "@iconify-json/lucide": "^1.2.112",
     "@iconify-json/simple-icons": "^1.2.86",
+    "@internationalized/date": "3.12.1",
     "@nhost/nhost-js": "^4.7.2",
     "@nuxt/icon": "2.2.3",
     "@nuxt/ui": "^4.8.2",
+    "@unovis/ts": "1.6.5",
+    "@unovis/vue": "1.6.5",
     "nuxt": "^4.4.8",
     "tailwindcss": "^4.3.1"
   },
