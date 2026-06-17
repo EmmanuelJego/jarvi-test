@@ -6,7 +6,7 @@
         <AppLogo class="size-9" />
       </NuxtLink>
 
-      <!-- Group 1 -->
+      <!-- Top section -->
       <div class="flex flex-col items-center gap-1">
         <SidebarButton
           v-for="item in topItems"
@@ -15,7 +15,7 @@
         />
       </div>
 
-      <!-- Group 2 (CRM / ATS), vertically centered -->
+      <!-- Middle section -->
       <div class="flex flex-1 flex-col items-center justify-center gap-5">
         <div class="flex flex-col items-center gap-1">
           <span class="text-[10px] font-semibold uppercase tracking-wide text-white/50">CRM</span>
@@ -36,7 +36,7 @@
         </div>
       </div>
 
-      <!-- Group 3 (bottom) -->
+      <!-- Bottom section -->
       <div class="flex flex-col items-center gap-1">
         <SidebarButton
           v-for="item in bottomItems"

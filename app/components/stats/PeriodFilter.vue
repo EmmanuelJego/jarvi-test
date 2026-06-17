@@ -32,7 +32,6 @@
 
 <script setup lang="ts">
 import { CalendarDate, getLocalTimeZone, type DateValue } from '@internationalized/date'
-import { PERIOD_PRESET_OPTIONS, type PeriodPreset, type PeriodSelection } from '~/utils/periods'
 
 interface DateRange {
   start: DateValue | undefined
@@ -54,18 +53,20 @@ const range = shallowRef<DateRange>(
     : { start: undefined, end: undefined }
 )
 
-const rangeFormatter = new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'short' })
-
 const customLabel = computed(() => {
   const { start, end } = range.value
-  if (!start || !end) return 'Choisir une plage'
+  if (!start || !end) {
+    return 'Choisir une plage'
+  }
   const tz = getLocalTimeZone()
-  return `${rangeFormatter.format(start.toDate(tz))} – ${rangeFormatter.format(end.toDate(tz))}`
+  return `${rangeFormatter.format(start.toDate(tz))} - ${rangeFormatter.format(end.toDate(tz))}`
 })
 
-function emitCustom() {
+function setCustomPreset() {
   const { start, end } = range.value
-  if (!start || !end) return
+  if (!start || !end) {
+    return
+  }
   const tz = getLocalTimeZone()
   model.value = { preset: 'custom', from: start.toDate(tz), to: end.toDate(tz) }
 }
@@ -73,16 +74,24 @@ function emitCustom() {
 async function onPresetChange(value: PeriodPreset) {
   preset.value = value
   if (value === 'custom') {
-    setTimeout(() => open.value = true, 200)
-    emitCustom()
+    if (!range.value.start || !range.value.end) {
+      // Adding some delay so that the USelect auto-blur does not close the popover
+      setTimeout(() => open.value = true, 200)
+    }
+
+    setCustomPreset()
   } else {
     model.value = { preset: value }
   }
 }
 
 watch(range, () => {
-  if (preset.value !== 'custom') return
-  emitCustom()
-  if (range.value.start && range.value.end) open.value = false
+  if (preset.value !== 'custom') {
+    return
+  }
+  setCustomPreset()
+  if (range.value.start && range.value.end) {
+    open.value = false
+  }
 })
 </script>

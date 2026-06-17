@@ -36,29 +36,29 @@
       >
         <VisGroupedBar
           :data="bars"
-          :x="barX"
-          :y="barY"
-          :color="barColorAccessor"
+          :x="(bar: Bar) => bar.x"
+          :y="(bar: Bar) => bar.value"
+          :color="(bar: Bar) => bar.color"
           :rounded-corners="4"
           :bar-padding="0.1"
           :group-padding="0.1"
         />
         <VisXYLabels
           :data="labelData"
-          :x="labelX"
-          :y="labelY"
-          :label="labelText"
-          :color="labelColor"
+          :x="(label: BarLabel) => label.x"
+          :y="(label: BarLabel) => label.y"
+          :label="(label: BarLabel) => percentFormatter(label.value)"
+          color="#4b5563"
           :label-font-size="11"
           background-color="transparent"
           :clustering="false"
         />
         <VisXYLabels
           :data="evolutionData"
-          :x="evolutionX"
-          :y="evolutionY"
-          :label="evolutionGlyph"
-          :color="evolutionColor"
+          :x="(item: Evolution) => item.x"
+          :y="(item: Evolution) => item.y"
+          :label="(item: Evolution) => item.glyph"
+          :color="(item: Evolution) => item.color"
           :label-font-size="16"
           background-color="transparent"
           :clustering="false"
@@ -94,36 +94,10 @@
 </template>
 
 <script setup lang="ts">
+// I initially wanted to use the nuxt-charts modules, but since I needed more customizability I used the underlying lib (unovis)
+
 import { VisXYContainer, VisGroupedBar, VisAxis, VisTooltip, VisXYLabels } from '@unovis/vue'
 import { GroupedBar } from '@unovis/ts'
-import { CHANNELS } from '~/utils/channels'
-
-const props = defineProps<{
-  periods: Periods
-}>()
-
-const { rows, pending, error, refresh } = useResponseRates()
-
-watch(() => props.periods, () => refresh(props.periods), { immediate: true, deep: true })
-
-const hasData = computed(() => rows.value.some(row => row.currentTotal > 0 || row.previousTotal > 0))
-
-const channelColors: Record<string, string> = Object.fromEntries(
-  CHANNELS.map(channel => [channel.label, channel.color])
-)
-
-/** Convertit `#rrggbb` en `rgba(r, g, b, a)`. */
-function getColorWithAlpha(hex: string, alpha: number): string {
-  const value = hex.replace('#', '')
-  const r = parseInt(value.slice(0, 2), 16)
-  const g = parseInt(value.slice(2, 4), 16)
-  const b = parseInt(value.slice(4, 6), 16)
-  return `rgba(${r}, ${g}, ${b}, ${alpha})`
-}
-
-// Espacement (en unités de l'axe X) : 1 entre les 2 barres d'un canal, 3 entre canaux.
-const PAIR_GAP = 1
-const CHANNEL_GAP = 3
 
 interface Bar {
   x: number
@@ -135,10 +109,35 @@ interface Bar {
   total: number
 }
 
-/**
- * Une entrée par barre, positionnée explicitement sur l'axe X. En série unique,
- * le centre d'une barre vaut exactement xScale(x) — les libellés (même x) s'alignent donc parfaitement.
- */
+interface BarLabel {
+  x: number
+  y: number
+  value: number
+}
+
+interface Evolution {
+  x: number
+  y: number
+  glyph: string
+  color: string
+}
+
+const props = defineProps<{
+  periods: Periods
+}>()
+
+const { rows, pending, error, refresh } = useResponseRates()
+watch(() => props.periods, () => refresh(props.periods), { immediate: true, deep: true })
+
+const hasData = computed(() => rows.value.some(row => row.currentTotal > 0 || row.previousTotal > 0))
+
+const channelColors: Record<string, string> = Object.fromEntries(
+  CHANNELS.map(channel => [channel.label, channel.color])
+)
+
+const PAIR_GAP = 1
+const CHANNEL_GAP = 3
+
 const bars = computed<Bar[]>(() =>
   rows.value.flatMap((row, index) => {
     const base = channelColors[row.channel] ?? '#3f51b6'
@@ -150,69 +149,46 @@ const bars = computed<Bar[]>(() =>
   })
 )
 
-const barX = (bar: Bar) => bar.x
-const barY = [(bar: Bar) => bar.value]
-const barColorAccessor = (bar: Bar) => bar.color
-
 const maxRate = computed(() =>
   Math.max(0, ...rows.value.flatMap(row => [row.currentRate, row.previousRate]))
 )
+const lift = computed(() => maxRate.value * 0.05)
 
-// Domaine Y avec une marge en haut pour loger les libellés et l'indicateur d'évolution.
 const yDomain = computed<[number, number]>(() => [0, maxRate.value > 0 ? maxRate.value * 1.28 : 1])
 
-// Graduations X centrées entre les 2 barres de chaque canal.
+const labelData = computed<BarLabel[]>(() => {
+  return bars.value.map(bar => ({ x: bar.x, y: bar.value + lift.value, value: bar.value }))
+})
+
 const tickValues = computed(() => rows.value.map((_, index) => index * CHANNEL_GAP + PAIR_GAP / 2))
+
 const channelTick = (tick: number | Date) => {
   const index = Math.round((Number(tick) - PAIR_GAP / 2) / CHANNEL_GAP)
   return rows.value[index]?.channel ?? ''
 }
-const percentFormatter = (value: number | Date) => `${value}%`
 
-interface BarLabel {
-  x: number
-  y: number
-  value: number
+function percentFormatter(value: number | Date): string {
+  return `${value}%`
 }
 
-// Un libellé par barre, au même x que la barre, juste au-dessus de son sommet.
-const labelData = computed<BarLabel[]>(() => {
-  const lift = maxRate.value * 0.05
-  return bars.value.map(bar => ({ x: bar.x, y: bar.value + lift, value: bar.value }))
-})
-
-const labelX = (label: BarLabel) => label.x
-const labelY = (label: BarLabel) => label.y
-const labelText = (label: BarLabel) => `${label.value}%`
-const labelColor = () => '#4b5563'
-
-interface Evolution {
-  x: number
-  y: number
-  glyph: string
-  color: string
-}
-
-// Indicateur d'évolution par canal : ▲ vert (hausse) / ▼ rouge (baisse) / — gris (stable),
-// centré au-dessus du groupe (même x que la graduation), au-dessus des libellés de valeur.
+/**
+ * Evolution indicators:
+ * green ▲ for increase,
+ * red ▼ for decrease,
+ * grey — for stable
+ */
 const evolutionData = computed<Evolution[]>(() => {
-  const lift = maxRate.value * 0.05
   return rows.value.map((row, index) => {
     const x = index * CHANNEL_GAP + PAIR_GAP / 2
-    const y = Math.max(row.currentRate, row.previousRate) + lift * 2.4
+    const y = Math.max(row.currentRate, row.previousRate) + lift.value * 2.4
     if (row.currentRate > row.previousRate) return { x, y, glyph: '▲', color: '#16a34a' }
     if (row.currentRate < row.previousRate) return { x, y, glyph: '▼', color: '#dc2626' }
     return { x, y, glyph: '—', color: '#9ca3af' }
   })
 })
 
-const evolutionX = (item: Evolution) => item.x
-const evolutionY = (item: Evolution) => item.y
-const evolutionGlyph = (item: Evolution) => item.glyph
-const evolutionColor = (item: Evolution) => item.color
-
-/** Contenu HTML du tooltip de la barre survolée (injecté par Unovis). */
-function tooltipHtml(bar: Bar): string {
+// HTML content for the tooltip. Not able to inject it using the Vue template.
+function getTooltipHtml(bar: Bar): string {
   const noReply = bar.total - bar.replied
   return `<div style="min-width:200px">
     <div style="font-size:13px;font-weight:600;color:#111827">${bar.channel}</div>
@@ -220,13 +196,13 @@ function tooltipHtml(bar: Bar): string {
       <span style="display:flex;align-items:center;gap:6px;font-size:12px;color:#6b7280">
         <span style="width:8px;height:8px;border-radius:9999px;background:${bar.color}"></span>${bar.period}
       </span>
-      <span style="font-size:12px;font-weight:600;color:#111827">${bar.value}%</span>
+      <span style="font-size:12px;font-weight:600;color:#111827">${percentFormatter(bar.value)}</span>
     </div>
     <div style="padding-left:14px;font-size:11px;color:#9ca3af">${bar.replied} avec réponse · ${noReply} sans réponse</div>
   </div>`
 }
 
 const tooltipTriggers = {
-  [GroupedBar.selectors.bar]: (bar: Bar) => tooltipHtml(bar)
+  [GroupedBar.selectors.bar]: getTooltipHtml
 }
 </script>

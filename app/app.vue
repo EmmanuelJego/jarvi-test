@@ -12,8 +12,7 @@ useHead({
 })
 
 useSeoMeta({
-  title: 'Jarvi',
-  description: 'Plateforme de recrutement Jarvi'
+  title: 'Jarvi'
 })
 </script>
 

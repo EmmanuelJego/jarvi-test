@@ -1,4 +1,6 @@
-/** Convert `#rrggbb` to `rgba(r, g, b, a)` */
+/**
+ * Convert `#rrggbb` to `rgba(r, g, b, a)`
+ */
 export function getColorWithAlpha(hex: string, alpha: number): string {
   const value = hex.replace('#', '')
   const r = parseInt(value.slice(0, 2), 16)
